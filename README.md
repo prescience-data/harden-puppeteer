@@ -18,11 +18,13 @@ Additionally, it will add a tag to avoid attempting to modify more than once.
 
 1. `ExecutionContext.js`
   This is the most heavily modified file as it is the termination point for all Puppeteer DOM interactions.
-		 List of changes:
-		  * Change the name of the script src exposed in `new Error()` to something common.
-		  * Override the passed `contextPayload` id and create a new attribute for the isolated context.
-		  * Add an async method to create a new isolated world if not already created.
-		  * Add a line to `_evaluateInternal` to generate a new isolated context id if not generated.
+  
+  List of changes:
+  
+  - Change the name of the script src exposed in `new Error()` to something common.
+  - Override the passed `contextPayload` id and create a new attribute for the isolated context.
+  - Add an async method to create a new isolated world if not already created.
+  - Add a line to `_evaluateInternal` to generate a new isolated context id if not generated.
      
 2. `FrameManager.js`
   Remove the reference to puppeteer in the script src potentially exposed via `new Error()`
