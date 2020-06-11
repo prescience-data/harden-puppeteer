@@ -38,9 +38,9 @@ The change that attempts to create the Isolated World is demonstrated in an exam
 
 
 Look for the `/* ######## Inserted ######### /*` comments on lines:
-https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L25
-https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L42
-https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L79
+- https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L25
+- https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L42
+- https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L79
 
 
 
