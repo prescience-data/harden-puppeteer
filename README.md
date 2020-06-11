@@ -32,6 +32,15 @@ Additionally, it will add a tag to avoid attempting to modify more than once.
 3. `Launcher.js`
   Remove reference to puppeteer in the profile name
 
+#### Main function
+
+The change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here:
+
+(Look for the `/* ######## Inserted ######### /*` comments...)
+
+https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js
+
+
 #### How to reverse
 
 Just delete your `node_modules` folder and run `npm install` again.
