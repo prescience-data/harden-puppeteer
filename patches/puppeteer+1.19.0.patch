@@ -1,0 +1,84 @@
+diff --git a/node_modules/puppeteer/lib/ExecutionContext.js b/node_modules/puppeteer/lib/ExecutionContext.js
+index cda3899..44ea52c 100644
+--- a/node_modules/puppeteer/lib/ExecutionContext.js
++++ b/node_modules/puppeteer/lib/ExecutionContext.js
+@@ -17,7 +17,7 @@
+ const {helper, assert} = require('./helper');
+ const {createJSHandle, JSHandle} = require('./JSHandle');
+ 
+-const EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__';
++const EVALUATION_SCRIPT_URL = 'analytics.js';
+ const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
+ 
+ class ExecutionContext {
+@@ -29,7 +29,31 @@ class ExecutionContext {
+   constructor(client, contextPayload, world) {
+     this._client = client;
+     this._world = world;
+-    this._contextId = contextPayload.id;
++    this._contextId = null;
++    this._iso = null;
++  }
++
++  /**
++   * @return void
++   */
++  async createNewIsolatedContext() {
++    if (!this._iso && this.frame()) {
++      const worldName = this.createUuid();
++      this._iso = await this._client.send('Page.createIsolatedWorld', { frameId: this.frame()._id, grantUniveralAccess: true, worldName: worldName });
++      this._contextId = this._iso.executionContextId;
++    }
++  }
++
++  /**
++   * @return string
++   */
++  createUuid() {
++    let dt = new Date().getTime();
++    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
++      const r = (dt + Math.random() * 16) % 16 | 0;
++      dt = Math.floor(dt / 16);
++      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
++    });
+   }
+ 
+   /**
+@@ -64,6 +88,11 @@ class ExecutionContext {
+    * @return {!Promise<*>}
+    */
+   async _evaluateInternal(returnByValue, pageFunction, ...args) {
++
++    if (!this._contextId) {
++      await this.createNewIsolatedContext();
++    }
++
+     const suffix = `//# sourceURL=${EVALUATION_SCRIPT_URL}`;
+ 
+     if (helper.isString(pageFunction)) {
+diff --git a/node_modules/puppeteer/lib/FrameManager.js b/node_modules/puppeteer/lib/FrameManager.js
+index 4f0fa60..60b1fb6 100644
+--- a/node_modules/puppeteer/lib/FrameManager.js
++++ b/node_modules/puppeteer/lib/FrameManager.js
+@@ -22,7 +22,7 @@ const {LifecycleWatcher} = require('./LifecycleWatcher');
+ const {DOMWorld} = require('./DOMWorld');
+ const {NetworkManager} = require('./NetworkManager');
+ 
+-const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
++const UTILITY_WORLD_NAME = '__utility_world__';
+ 
+ class FrameManager extends EventEmitter {
+   /**
+diff --git a/node_modules/puppeteer/lib/Launcher.js b/node_modules/puppeteer/lib/Launcher.js
+index 5bfd0d7..d8865c0 100644
+--- a/node_modules/puppeteer/lib/Launcher.js
++++ b/node_modules/puppeteer/lib/Launcher.js
+@@ -33,7 +33,7 @@ const PipeTransport = require('./PipeTransport');
+ const mkdtempAsync = helper.promisify(fs.mkdtemp);
+ const removeFolderAsync = helper.promisify(removeFolder);
+ 
+-const CHROME_PROFILE_PATH = path.join(os.tmpdir(), 'puppeteer_dev_profile-');
++const CHROME_PROFILE_PATH = path.join(os.tmpdir(), 'default-profile-');
+ 
+ const DEFAULT_ARGS = [
+   '--disable-background-networking',
