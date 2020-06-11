@@ -34,11 +34,14 @@ Additionally, it will add a tag to avoid attempting to modify more than once.
 
 #### Main function
 
-The change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here:
+The change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here: https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js
 
-(Look for the `/* ######## Inserted ######### /*` comments...)
 
-https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js
+Look for the `/* ######## Inserted ######### /*` comments on lines:
+https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L25
+https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L42
+https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L79
+
 
 
 #### How to reverse
