@@ -3,7 +3,7 @@ An atrociously hacky script to modify some vanilla puppeteer files to decrease d
 
 Attempts to address https://github.com/puppeteer/puppeteer/issues/2671
 
-#### What it does
+### What it does
 
 To avoid maintaining a fork of vanilla Puppeteer, the script makes a few edits to core Puppeteer files within your `node_modules` folder.
 
@@ -14,9 +14,9 @@ More importantly _(and which theoretically should avoid the need for the above c
 The script will loop through a list of weak files and insert or replace the hardened strings & functions to the core puppeteer files.
 Additionally, it will add a tag to avoid attempting to modify more than once.
 
-#### What files are modified?
+### What files are modified?
 
-1. `ExecutionContext.js`
+#### `ExecutionContext.js`
   This is the most heavily modified file as it is the termination point for all Puppeteer DOM interactions.
   
   List of changes:
@@ -26,13 +26,13 @@ Additionally, it will add a tag to avoid attempting to modify more than once.
   - Add an async method to create a new isolated world if not already created.
   - Add a line to `_evaluateInternal` to generate a new isolated context id if not generated.
      
-2. `FrameManager.js`
+#### `FrameManager.js`
   Remove the reference to puppeteer in the script src potentially exposed via `new Error()`
   
-3. `Launcher.js`
+##### `Launcher.js`
   Remove reference to puppeteer in the profile name
 
-#### Main function
+### Main function
 
 The change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here: https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js
 
@@ -44,7 +44,7 @@ Look for the `/* ######## Inserted ######### /*` comments on lines:
 
 
 
-#### How to reverse
+### How to reverse
 
 Just delete your `node_modules` folder and run `npm install` again.
 
@@ -52,6 +52,7 @@ For example:
 ```bash
 $ rm -rf ./node_modules; npm install;
 ```
-#### Disclaimer
+
+### Disclaimer
 This is just an intial concept sketch for feedback in the main Puppeteer-Extra https://github.com/berstend/puppeteer-extra repo, I have no idea if it actually works as intended or what it might break, so use at your own risk.
 
