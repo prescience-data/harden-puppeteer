@@ -16,7 +16,7 @@ Additionally, it will add a tag to avoid attempting to modify more than once.
 
 ### What files are modified?
 
-#### `ExecutionContext.js`
+##### `ExecutionContext.js`
   This is the most heavily modified file as it is the termination point for all Puppeteer DOM interactions.
   
   List of changes:
@@ -26,7 +26,7 @@ Additionally, it will add a tag to avoid attempting to modify more than once.
   - Add an async method to create a new isolated world if not already created.
   - Add a line to `_evaluateInternal` to generate a new isolated context id if not generated.
      
-#### `FrameManager.js`
+##### `FrameManager.js`
   Remove the reference to puppeteer in the script src potentially exposed via `new Error()`
   
 ##### `Launcher.js`
