@@ -9,7 +9,7 @@ To avoid maintaining a fork of vanilla Puppeteer, the script makes a few edits t
 
 The goal is to strip strings that reference Puppeteer which are exposed via throwing a `new Error()` and checking the trace.
 
-More importantly (which theoretically should avoid the need for the above changes) the script modifies Puppeteer's `ExecutionContext` class to automatically create a new IsolatedWorld and use this as the context rather than the one passed in.
+More importantly _(and which theoretically should avoid the need for the above changes)_ the script modifies Puppeteer's `ExecutionContext` class to automatically create a new IsolatedWorld and use this as the context rather than the one passed in.
 
 The script will loop through a list of weak files and insert or replace the hardened strings & functions to the core puppeteer files.
 Additionally, it will add a tag to avoid attempting to modify more than once.
