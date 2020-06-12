@@ -3,6 +3,12 @@ An atrociously hacky script to modify some vanilla puppeteer files to decrease d
 
 Attempts to address https://github.com/puppeteer/puppeteer/issues/2671
 
+### Patching with Patch-Package
+
+- Install Patch-Package https://github.com/ds300/patch-package 
+- Copy the `patches` folder to your project directory
+- Run `node patch-package` to apply the changes
+
 ### What it does
 
 To avoid maintaining a fork of vanilla Puppeteer, the script makes a few edits to core Puppeteer files within your `node_modules` folder.
