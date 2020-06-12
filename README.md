@@ -5,9 +5,12 @@ Attempts to address https://github.com/puppeteer/puppeteer/issues/2671
 
 ### Patching with Patch-Package
 
+_Compatible with Puppeteer 1.19.0 (newer TS versions should apply manually)_
+
 - Install Patch-Package https://github.com/ds300/patch-package 
 - Copy the `patches` folder to your project directory
 - Run `node patch-package` to apply the changes
+- Run `node patch-package --reverse` to remove
 
 ### What it does
 
@@ -51,6 +54,10 @@ Look for the `/* ######## Inserted ######### /*` comments on lines:
 
 
 ### How to reverse
+
+If using Patch-Package run 
+
+Or if using the manual script
 
 Just delete your `node_modules` folder and run `npm install` again.
 
