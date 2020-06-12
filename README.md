@@ -14,7 +14,7 @@ _Compatible with Puppeteer 1.19.0 (newer TS versions should apply manually)_
 
 ### What it does
 
-To avoid maintaining a fork of vanilla Puppeteer, the script makes a few edits to core Puppeteer files within your `node_modules` folder.
+To avoid maintaining a fork of vanilla Puppeteer, the patch makes a few edits to core Puppeteer files within your `node_modules` folder.
 
 The goal is to strip strings that reference Puppeteer which are exposed via throwing a `new Error()` and checking the trace.
 
@@ -42,6 +42,11 @@ More importantly _(and which theoretically should avoid the need for the above c
 
 The main change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here: https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Patched.js
 
+
+### Additional suggestions
+
+This appears to be a good method to counter the `new Error()` detection approach as well:
+https://github.com/berstend/puppeteer-extra/issues/209#issuecomment-642988817
 
 ### How to reverse
 
