@@ -1,5 +1,5 @@
 # Harden Vanilla Puppeteer
-An atrociously hacky script to modify some vanilla puppeteer files to decrease detection rates.
+An atrociously hacky patch to modify some vanilla puppeteer files to decrease detection rates.
 
 Attempts to address https://github.com/puppeteer/puppeteer/issues/2671
 
