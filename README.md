@@ -43,23 +43,14 @@ Additionally, it will add a tag to avoid attempting to modify more than once.
 
 ### Main function
 
-The change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here: https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js
-
-
-Look for the `/* ######## Inserted ######### /*` comments on lines:
-- https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L25
-- https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L42
-- https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Demo.js#L79
-
+The change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here: https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Patched.js
 
 
 ### How to reverse
 
-If using Patch-Package run 
+If using Patch-Package running `node patch-package --remove` should work.
 
-Or if using the manual script
-
-Just delete your `node_modules` folder and run `npm install` again.
+If manually editing your files, just delete your `node_modules` folder and run `npm install` again.
 
 For example: 
 ```bash
