@@ -3,6 +3,9 @@ An atrociously hacky patch to modify some vanilla puppeteer files to decrease de
 
 Attempts to address https://github.com/puppeteer/puppeteer/issues/2671
 
+### Disclaimer
+This is just an intial concept sketch for feedback in the main Puppeteer-Extra https://github.com/berstend/puppeteer-extra repo, I have no idea if it actually works as intended or what it might break, so use at your own risk.
+
 ### Patching with Patch-Package
 
 _Compatible with Puppeteer 1.19.0 (newer TS versions should apply manually)_
@@ -59,6 +62,4 @@ For example:
 $ rm -rf ./node_modules; npm install;
 ```
 
-### Disclaimer
-This is just an intial concept sketch for feedback in the main Puppeteer-Extra https://github.com/berstend/puppeteer-extra repo, I have no idea if it actually works as intended or what it might break, so use at your own risk.
 
