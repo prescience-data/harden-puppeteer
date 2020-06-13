@@ -19,31 +19,23 @@ _Compatible with Puppeteer 1.19.0 (newer TS versions should apply manually)_
 
 To avoid maintaining a fork of vanilla Puppeteer, the patch makes a few edits to core Puppeteer files within your `node_modules` folder.
 
-The goal is to strip strings that reference Puppeteer which are exposed via throwing a `new Error()` and checking the trace.
+The goal is to strip strings that reference Puppeteer which are exposed via throwing a `new Error()` and checking the trace and switch pretty much every call to run in an isolated world (apart from `waitForFunction`).
 
-More importantly _(and which theoretically should avoid the need for the above changes)_ the patch modifies Puppeteer's `ExecutionContext` class to automatically create a new IsolatedWorld and use this as the context rather than the one passed in.
+The patch modifies Puppeteer's `FrameManager` class to automatically create a new Isolated World and use this as the context rather than the default one.
 
 ### What files are modified?
 
 ##### `ExecutionContext.js`
-  This is the most heavily modified file as it is the termination point for all Puppeteer DOM interactions.
-  
-  List of changes:
-  
-  - Change the name of the script src exposed in `new Error()` to something common.
-  - Override the passed `contextPayload` id and create a new attribute for the isolated context.
-  - Add an async method to create a new isolated world if not already created.
-  - Add a line to `_evaluateInternal` to generate a new isolated context id if not generated.
+- Change the name of the script src exposed in `new Error()` to something common.
+- Add some attributes to help detect if isolated or not.
      
 ##### `FrameManager.js`
-  Remove the reference to puppeteer in the script src potentially exposed via `new Error()`
+- Remove the reference to puppeteer in the utility world name potentially exposed via `new Error()`.
+- Add a new `DOMWorld` called `_isolatedWorld` and call `_ensureIsolatedWorld()` to isolate it.
+- Overwrite basically every call to the unprotected `_mainWorld` with `_isolatedWorld` except for `waitForFunction()` (let me know if this is unnessecarily exposed?).
   
 ##### `Launcher.js`
-  Remove reference to puppeteer in the profile name
-
-### Main function
-
-The main change that attempts to create the Isolated World is demonstrated in an example of the modified `ExecutionContext.js` file here: https://github.com/prescience-data/harden-puppeteer/blob/master/ExecutionContext-Patched.js
+- Remove reference to puppeteer in the Chrome profile name.
 
 
 ### Additional suggestions
