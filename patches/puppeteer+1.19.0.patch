@@ -1,5 +1,5 @@
 diff --git a/node_modules/puppeteer/lib/ExecutionContext.js b/node_modules/puppeteer/lib/ExecutionContext.js
-index cda3899..43b7cd3 100644
+index cda3899..8f68c55 100644
 --- a/node_modules/puppeteer/lib/ExecutionContext.js
 +++ b/node_modules/puppeteer/lib/ExecutionContext.js
 @@ -17,7 +17,7 @@
@@ -11,66 +11,181 @@ index cda3899..43b7cd3 100644
  const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
  
  class ExecutionContext {
-@@ -29,7 +29,13 @@ class ExecutionContext {
-   constructor(client, contextPayload, world) {
+@@ -30,6 +30,8 @@ class ExecutionContext {
      this._client = client;
      this._world = world;
--    this._contextId = contextPayload.id;
-+    if (contextPayload.auxData && contextPayload.auxData.type === 'isolated') {
-+      this._contextId = contextPayload.id;
-+    }
-+    else {
-+      this._contextId = null;
-+      this._iso = null;
-+    }
+     this._contextId = contextPayload.id;
++    this._isIsolated = (contextPayload.auxData && contextPayload.auxData['type'] === 'isolated');
++    this._contextName = contextPayload.name;
    }
  
    /**
-@@ -39,6 +45,20 @@ class ExecutionContext {
-     return this._world ? this._world.frame() : null;
-   }
- 
-+  /**
-+   * @return void
-+   */
-+  async createNewIsolatedContext() {
-+    return new Promise(async resolve => {
-+      if (!this._contextId && this.frame()) {
-+        const worldName = 'i' + process.hrtime.bigint();
-+        this._iso = await this._client.send('Page.createIsolatedWorld', { frameId: this.frame()._id, grantUniveralAccess: true, worldName: worldName });
-+        this._contextId = this._iso.executionContextId;
-+      }
-+      resolve();
-+    });
-+  }
-+
-   /**
-    * @param {Function|string} pageFunction
-    * @param {...*} args
-@@ -66,6 +86,10 @@ class ExecutionContext {
-   async _evaluateInternal(returnByValue, pageFunction, ...args) {
-     const suffix = `//# sourceURL=${EVALUATION_SCRIPT_URL}`;
- 
-+    if (!this._contextId) {
-+      await this.createNewIsolatedContext();
-+    }
-+
-     if (helper.isString(pageFunction)) {
-       const contextId = this._contextId;
-       const expression = /** @type {string} */ (pageFunction);
 diff --git a/node_modules/puppeteer/lib/FrameManager.js b/node_modules/puppeteer/lib/FrameManager.js
-index 4f0fa60..80ad733 100644
+index 4f0fa60..2a820b7 100644
 --- a/node_modules/puppeteer/lib/FrameManager.js
 +++ b/node_modules/puppeteer/lib/FrameManager.js
-@@ -22,7 +22,7 @@ const {LifecycleWatcher} = require('./LifecycleWatcher');
+@@ -22,7 +22,8 @@ const {LifecycleWatcher} = require('./LifecycleWatcher');
  const {DOMWorld} = require('./DOMWorld');
  const {NetworkManager} = require('./NetworkManager');
  
 -const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
 +const UTILITY_WORLD_NAME = 'utility_world';
++const ISOLATED_WORLD_NAME = 'isolated_world';
  
  class FrameManager extends EventEmitter {
    /**
+@@ -64,7 +65,7 @@ class FrameManager extends EventEmitter {
+     this._handleFrameTree(frameTree);
+     await Promise.all([
+       this._client.send('Page.setLifecycleEventsEnabled', { enabled: true }),
+-      this._client.send('Runtime.enable', {}).then(() => this._ensureIsolatedWorld(UTILITY_WORLD_NAME)),
++      this._client.send('Runtime.enable', {}).then(() => { this._ensureIsolatedWorld(UTILITY_WORLD_NAME); this._ensureIsolatedWorld(ISOLATED_WORLD_NAME); }),
+       this._networkManager.initialize(),
+     ]);
+   }
+@@ -313,6 +314,8 @@ class FrameManager extends EventEmitter {
+         // connections so we might end up creating multiple isolated worlds.
+         // We can use either.
+         world = frame._secondaryWorld;
++      } else if (contextPayload.name === ISOLATED_WORLD_NAME && !frame._isolatedWorld._hasContext()) {
++        world = frame._isolatedWorld;
+       }
+     }
+     if (contextPayload.auxData && contextPayload.auxData['type'] === 'isolated')
+@@ -391,6 +394,8 @@ class Frame {
+     this._mainWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
+     /** @type {!DOMWorld} */
+     this._secondaryWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
++    /** @type {!DOMWorld} */
++    this._isolatedWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
+ 
+     /** @type {!Set<!Frame>} */
+     this._childFrames = new Set();
+@@ -419,7 +424,7 @@ class Frame {
+    * @return {!Promise<!ExecutionContext>}
+    */
+   executionContext() {
+-    return this._mainWorld.executionContext();
++    return this._isolatedWorld.executionContext();
+   }
+ 
+   /**
+@@ -428,7 +433,7 @@ class Frame {
+    * @return {!Promise<!Puppeteer.JSHandle>}
+    */
+   async evaluateHandle(pageFunction, ...args) {
+-    return this._mainWorld.evaluateHandle(pageFunction, ...args);
++    return this._isolatedWorld.evaluateHandle(pageFunction, ...args);
+   }
+ 
+   /**
+@@ -437,7 +442,7 @@ class Frame {
+    * @return {!Promise<*>}
+    */
+   async evaluate(pageFunction, ...args) {
+-    return this._mainWorld.evaluate(pageFunction, ...args);
++    return this._isolatedWorld.evaluate(pageFunction, ...args);
+   }
+ 
+   /**
+@@ -445,7 +450,7 @@ class Frame {
+    * @return {!Promise<?Puppeteer.ElementHandle>}
+    */
+   async $(selector) {
+-    return this._mainWorld.$(selector);
++    return this._isolatedWorld.$(selector);
+   }
+ 
+   /**
+@@ -453,7 +458,7 @@ class Frame {
+    * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+    */
+   async $x(expression) {
+-    return this._mainWorld.$x(expression);
++    return this._isolatedWorld.$x(expression);
+   }
+ 
+   /**
+@@ -463,7 +468,7 @@ class Frame {
+    * @return {!Promise<(!Object|undefined)>}
+    */
+   async $eval(selector, pageFunction, ...args) {
+-    return this._mainWorld.$eval(selector, pageFunction, ...args);
++    return this._isolatedWorld.$eval(selector, pageFunction, ...args);
+   }
+ 
+   /**
+@@ -473,7 +478,7 @@ class Frame {
+    * @return {!Promise<(!Object|undefined)>}
+    */
+   async $$eval(selector, pageFunction, ...args) {
+-    return this._mainWorld.$$eval(selector, pageFunction, ...args);
++    return this._isolatedWorld.$$eval(selector, pageFunction, ...args);
+   }
+ 
+   /**
+@@ -481,7 +486,7 @@ class Frame {
+    * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
+    */
+   async $$(selector) {
+-    return this._mainWorld.$$(selector);
++    return this._isolatedWorld.$$(selector);
+   }
+ 
+   /**
+@@ -539,7 +544,7 @@ class Frame {
+    * @return {!Promise<!Puppeteer.ElementHandle>}
+    */
+   async addScriptTag(options) {
+-    return this._mainWorld.addScriptTag(options);
++    return this._isolatedWorld.addScriptTag(options);
+   }
+ 
+   /**
+@@ -547,7 +552,7 @@ class Frame {
+    * @return {!Promise<!Puppeteer.ElementHandle>}
+    */
+   async addStyleTag(options) {
+-    return this._mainWorld.addStyleTag(options);
++    return this._isolatedWorld.addStyleTag(options);
+   }
+ 
+   /**
+@@ -594,7 +599,7 @@ class Frame {
+    * @param {{delay: (number|undefined)}=} options
+    */
+   async type(selector, text, options) {
+-    return this._mainWorld.type(selector, text, options);
++    return this._isolatedWorld.type(selector, text, options);
+   }
+ 
+   /**
+@@ -628,7 +633,7 @@ class Frame {
+     const handle = await this._secondaryWorld.waitForSelector(selector, options);
+     if (!handle)
+       return null;
+-    const mainExecutionContext = await this._mainWorld.executionContext();
++    const mainExecutionContext = await this._isolatedWorld.executionContext();
+     const result = await mainExecutionContext._adoptElementHandle(handle);
+     await handle.dispose();
+     return result;
+@@ -643,7 +648,7 @@ class Frame {
+     const handle = await this._secondaryWorld.waitForXPath(xpath, options);
+     if (!handle)
+       return null;
+-    const mainExecutionContext = await this._mainWorld.executionContext();
++    const mainExecutionContext = await this._isolatedWorld.executionContext();
+     const result = await mainExecutionContext._adoptElementHandle(handle);
+     await handle.dispose();
+     return result;
+@@ -703,6 +708,7 @@ class Frame {
+     this._detached = true;
+     this._mainWorld._detach();
+     this._secondaryWorld._detach();
++    this._isolatedWorld._detach();
+     if (this._parentFrame)
+       this._parentFrame._childFrames.delete(this);
+     this._parentFrame = null;
 diff --git a/node_modules/puppeteer/lib/Launcher.js b/node_modules/puppeteer/lib/Launcher.js
 index 5bfd0d7..a89179d 100644
 --- a/node_modules/puppeteer/lib/Launcher.js
