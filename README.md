@@ -36,7 +36,7 @@ The patch modifies Puppeteer's `FrameManager` class to automatically create a ne
   
 ##### `Launcher.js`
 - Remove reference to puppeteer in the Chrome profile name.
-
+- Remove reference to puppeteer in the Firefox profile name.
 
 ### Additional suggestions
 
