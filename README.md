@@ -27,7 +27,7 @@ The patch modifies Puppeteer's `FrameManager` class to automatically create a ne
 
 ##### `ExecutionContext.js`
 - Change the name of the script src exposed in `new Error()` to something common.
-- Add some attributes to help detect if isolated or not.
+- Add some attributes `_isIsolated` and `_contextName` to help detect if isolated or not.
      
 ##### `FrameManager.js`
 - Remove the reference to puppeteer in the utility world name potentially exposed via `new Error()`.
