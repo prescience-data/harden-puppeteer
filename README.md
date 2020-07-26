@@ -8,7 +8,7 @@ This is just an intial concept sketch for feedback in the main Puppeteer-Extra h
 
 ### Patching with Patch-Package
 
-_Compatible with Puppeteer 1.19.0 and 2.1.0 (newer TS versions should apply manually)_
+_Compatible with Puppeteer 1.19.0 and 2.1.0 (newer TS versions should apply manually, however an untested 5.2.1 patch is available)
 
 - Install Patch-Package https://github.com/ds300/patch-package 
 - Copy the `patches` folder to your project directory
