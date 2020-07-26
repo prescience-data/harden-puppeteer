@@ -54,4 +54,20 @@ For example:
 $ rm -rf ./node_modules; npm install;
 ```
 
+### Test
+If you'd like to create a test to check if your code is detectable, there is a basic starting point here:
 
+Puppeteer Test: https://github.com/prescience-data/puppeteer-botcheck/blob/b6848845b8b5887608784caa2fe7a078db866e9b/Botcheck.js#L45
+Host Monitoring Execution: https://github.com/prescience-data/prescience-data.github.io/blob/master/execution-monitor.html
+
+URL of the live test: https://prescience-data.github.io/execution-monitor.html
+
+Here's the differences between unpatched and patched:
+
+![comparison](https://github.com/prescience-data/harden-puppeteer/blob/master/comparison.jpg?raw=true)
+
+You can see that the patched version only detects the inserted elements (which was left deliberately unisolated to allow user to inject scripts into the main context (ie all the extra-stealth modifications).
+
+However, anything other than that is running isolated and outside the security scope of any bot detection script.
+
+Naturally they would be able to observe changes you make to the DOM, but only the **outcome**, not *how* the execution is occurring.
