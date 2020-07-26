@@ -57,10 +57,9 @@ $ rm -rf ./node_modules; npm install;
 ### Test
 If you'd like to create a test to check if your code is detectable, there is a basic starting point here:
 
-Puppeteer Test: https://github.com/prescience-data/puppeteer-botcheck/blob/b6848845b8b5887608784caa2fe7a078db866e9b/Botcheck.js#L45
-Host Monitoring Execution: https://github.com/prescience-data/prescience-data.github.io/blob/master/execution-monitor.html
-
-URL of the live test: https://prescience-data.github.io/execution-monitor.html
+- Puppeteer Test: https://github.com/prescience-data/puppeteer-botcheck/blob/b6848845b8b5887608784caa2fe7a078db866e9b/Botcheck.js#L45
+- Host Monitoring Execution: https://github.com/prescience-data/prescience-data.github.io/blob/master/execution-monitor.html
+- URL of the live test: https://prescience-data.github.io/execution-monitor.html
 
 Here's the differences between unpatched and patched:
 
