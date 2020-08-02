@@ -5,7 +5,7 @@ More about isolated worlds here: https://developer.chrome.com/extensions/content
 
 ### Patching with Patch-Package
 
-_Compatible with Puppeteer 1.19.0, 2.1.0, and 5.2.1 (other versions should apply manually, following the changes)
+Patches available for Puppeteer 1.19.0, 2.1.1, and 5.2.1 (other versions should apply manually, following the changes)
 
 - Install Patch-Package https://github.com/ds300/patch-package 
 - Copy the `patches` folder to your project directory
