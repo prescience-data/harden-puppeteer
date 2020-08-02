@@ -1,14 +1,11 @@
 # Harden Vanilla Puppeteer
-An conceptual patch to modify some vanilla puppeteer files to decrease detection rates.
+An patch to modify some core puppeteer files to decrease detection rates by switching execution to an isolated world. 
 
-Attempts to address https://github.com/puppeteer/puppeteer/issues/2671
-
-### Disclaimer
-This is just an intial concept sketch for feedback in the main Puppeteer-Extra https://github.com/berstend/puppeteer-extra repo, I have no idea if it actually works as intended or what it might break, so use at your own risk.
+More about isolated worlds here: https://developer.chrome.com/extensions/content_scripts
 
 ### Patching with Patch-Package
 
-_Compatible with Puppeteer 1.19.0 and 2.1.0 (newer TS versions should apply manually, however an untested 5.2.1 patch is available)
+_Compatible with Puppeteer 1.19.0, 2.1.0, and 5.2.1 (other versions should apply manually, following the changes)
 
 - Install Patch-Package https://github.com/ds300/patch-package 
 - Copy the `patches` folder to your project directory
@@ -26,22 +23,17 @@ The patch modifies Puppeteer's `FrameManager` class to automatically create a ne
 ### What files are modified?
 
 ##### `ExecutionContext.js`
-- Change the name of the script src exposed in `new Error()` to something common.
+- Change the name of the script src exposed in `new Error()` to a random common script name.
 - Add some attributes `_isIsolated` and `_contextName` to help detect if isolated or not.
      
 ##### `FrameManager.js`
 - Remove the reference to puppeteer in the utility world name potentially exposed via `new Error()`.
 - Add a new `DOMWorld` called `_isolatedWorld` and call `_ensureIsolatedWorld()` to isolate it.
-- Overwrite basically every call to the unprotected `_mainWorld` with `_isolatedWorld` except for `waitForFunction()` (let me know if this is unnessecarily exposed?).
+- Overwrite basically every call to the unprotected `_mainWorld` with `_isolatedWorld` except for `waitForFunction()`.
   
 ##### `Launcher.js`
 - Remove reference to puppeteer in the Chrome profile name.
 - Remove reference to puppeteer in the Firefox profile name.
-
-### Additional suggestions
-
-This appears to be a good method to counter the `new Error()` detection approach as well:
-https://github.com/berstend/puppeteer-extra/issues/209#issuecomment-642988817
 
 ### How to reverse
 
