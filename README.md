@@ -63,10 +63,13 @@ If you'd like to create a test to check if your code is detectable, there is a b
 
 Here's the differences between unpatched and patched:
 
-![comparison](https://github.com/prescience-data/harden-puppeteer/blob/master/comparison.jpg?raw=true)
+##### Unpatched:
+![Unpatched](https://github.com/prescience-data/harden-puppeteer/blob/master/isolated_unpatched.jpg?raw=true)
+##### Patched:
+![Patched](https://github.com/prescience-data/harden-puppeteer/blob/master/isolated_patched.jpg?raw=true)
 
-You can see that the patched version only detects the inserted elements (which was left deliberately unisolated to allow user to inject scripts into the main context (ie all the extra-stealth modifications).
+The patched version still runs any scripts injected via `page.evaluateOnNewDocument()` in the `_mainWorld` so watch for that.
 
-However, anything other than that is running isolated and outside the security scope of any bot detection script.
+However, everything else is running in the `_isolatedWorld` and outside the security scope of detection scripts monitoring execution.
 
-Naturally they would be able to observe changes you make to the DOM, but only the **outcome**, not *how* the execution is occurring.
+Naturally, they would be able to observe changes you make to the DOM, but only the **outcome**, not *how* the execution is occurring.
