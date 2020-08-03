@@ -1,5 +1,5 @@
 # Harden Vanilla Puppeteer
-An patch to modify some core puppeteer files to decrease detection rates by switching execution to an isolated world. 
+A patch to modify some core puppeteer files to decrease detection rates by switching execution to an isolated world. 
 
 More about isolated worlds here: https://developer.chrome.com/extensions/content_scripts
 
