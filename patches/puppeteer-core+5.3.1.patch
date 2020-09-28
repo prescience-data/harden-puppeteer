@@ -22,7 +22,7 @@ index d819547..72baa9d 100644
      /**
       * @remarks
 diff --git a/node_modules/puppeteer-core/lib/cjs/puppeteer/common/FrameManager.js b/node_modules/puppeteer-core/lib/cjs/puppeteer/common/FrameManager.js
-index d88b288..b0c2217 100644
+index d88b288..afb5314 100644
 --- a/node_modules/puppeteer-core/lib/cjs/puppeteer/common/FrameManager.js
 +++ b/node_modules/puppeteer-core/lib/cjs/puppeteer/common/FrameManager.js
 @@ -24,7 +24,8 @@ const ExecutionContext_js_1 = require("./ExecutionContext.js");
@@ -40,10 +40,10 @@ index d88b288..b0c2217 100644
              this._client
                  .send('Runtime.enable')
 -                .then(() => this._ensureIsolatedWorld(UTILITY_WORLD_NAME)),
-+              .then(() => {
-+                  this._ensureIsolatedWorld(UTILITY_WORLD_NAME);
-+                  this._ensureIsolatedWorld(ISOLATED_WORLD_NAME);
-+              }),
++                .then(() => {
++                    this._ensureIsolatedWorld(UTILITY_WORLD_NAME);
++                    this._ensureIsolatedWorld(ISOLATED_WORLD_NAME);
++                }),
              this._networkManager.initialize(),
          ]);
      }
