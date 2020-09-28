@@ -1,11 +1,11 @@
 # Harden Vanilla Puppeteer
-A patch to modify some core puppeteer files to decrease detection rates by switching execution to an isolated world. 
+A patch to modify some core Puppeteer files to decrease detection rates by switching execution to an isolated world. 
 
 More about isolated worlds here: https://developer.chrome.com/extensions/content_scripts
 
 ### Patching with Patch-Package
 
-Patches available for Puppeteer 1.19.0, 2.1.1, and 5.2.1 (other versions should apply manually, following the changes)
+Patches available for Puppeteer 1.19.0, 2.1.1, 5.2.1 & Puppeteer-Core 5.3.1 (other versions should apply manually, following the changes)
 
 - Install Patch-Package https://github.com/ds300/patch-package 
 - Copy the `patches` folder to your project directory
