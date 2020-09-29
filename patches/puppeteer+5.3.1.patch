@@ -1,0 +1,212 @@
+diff --git a/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js b/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js
+index d819547..72baa9d 100644
+--- a/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js
++++ b/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js
+@@ -19,7 +19,8 @@ exports.ExecutionContext = exports.EVALUATION_SCRIPT_URL = void 0;
+ const assert_js_1 = require("./assert.js");
+ const helper_js_1 = require("./helper.js");
+ const JSHandle_js_1 = require("./JSHandle.js");
+-exports.EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__';
++const EVALUATION_SCRIPT_URLS = ['analytics.js', 'jquery.min.js', 'lodash.min.js', 'app.js', 'moment.min.js'];
++exports.EVALUATION_SCRIPT_URL = EVALUATION_SCRIPT_URLS[Math.floor(Math.random() * (EVALUATION_SCRIPT_URLS.length + 1))];
+ const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
+ /**
+  * This class represents a context for JavaScript execution. A [Page] might have
+@@ -46,6 +47,8 @@ class ExecutionContext {
+         this._client = client;
+         this._world = world;
+         this._contextId = contextPayload.id;
++        this._isIsolated = (contextPayload.auxData && contextPayload.auxData['type'] === 'isolated');
++        this._contextName = contextPayload.name;
+     }
+     /**
+      * @remarks
+diff --git a/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js b/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js
+index d88b288..aa8fe11 100644
+--- a/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js
++++ b/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js
+@@ -24,7 +24,8 @@ const ExecutionContext_js_1 = require("./ExecutionContext.js");
+ const LifecycleWatcher_js_1 = require("./LifecycleWatcher.js");
+ const DOMWorld_js_1 = require("./DOMWorld.js");
+ const NetworkManager_js_1 = require("./NetworkManager.js");
+-const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
++const UTILITY_WORLD_NAME = 'util_';
++const ISOLATED_WORLD_NAME = 'iso_';
+ /**
+  * We use symbols to prevent external parties listening to these events.
+  * They are internal to Puppeteer.
+@@ -75,7 +76,7 @@ class FrameManager extends EventEmitter_js_1.EventEmitter {
+             this._client.send('Page.setLifecycleEventsEnabled', { enabled: true }),
+             this._client
+                 .send('Runtime.enable')
+-                .then(() => this._ensureIsolatedWorld(UTILITY_WORLD_NAME)),
++                .then(() => this._ensureIsolatedWorld(UTILITY_WORLD_NAME).then(() => this._ensureIsolatedWorld(ISOLATED_WORLD_NAME))),
+             this._networkManager.initialize(),
+         ]);
+     }
+@@ -262,6 +263,10 @@ class FrameManager extends EventEmitter_js_1.EventEmitter {
+                 // We can use either.
+                 world = frame._secondaryWorld;
+             }
++            else if (contextPayload.name === ISOLATED_WORLD_NAME &&
++                !frame._isolatedWorld._hasContext()) {
++                world = frame._isolatedWorld;
++            }
+         }
+         if (contextPayload.auxData && contextPayload.auxData['type'] === 'isolated')
+             this._isolatedWorlds.add(contextPayload.name);
+@@ -371,6 +376,7 @@ class Frame {
+         this._loaderId = '';
+         this._mainWorld = new DOMWorld_js_1.DOMWorld(frameManager, this, frameManager._timeoutSettings);
+         this._secondaryWorld = new DOMWorld_js_1.DOMWorld(frameManager, this, frameManager._timeoutSettings);
++        this._isolatedWorld = new DOMWorld_js_1.DOMWorld(frameManager, this, frameManager._timeoutSettings);
+         this._childFrames = new Set();
+         if (this._parentFrame)
+             this._parentFrame._childFrames.add(this);
+@@ -444,7 +450,7 @@ class Frame {
+      * @returns a promise that resolves to the frame's default execution context.
+      */
+     executionContext() {
+-        return this._mainWorld.executionContext();
++        return this._isolatedWorld.executionContext();
+     }
+     /**
+      * @remarks
+@@ -460,7 +466,7 @@ class Frame {
+      * @param args - arguments to be passed to the pageFunction
+      */
+     async evaluateHandle(pageFunction, ...args) {
+-        return this._mainWorld.evaluateHandle(pageFunction, ...args);
++        return this._isolatedWorld.evaluateHandle(pageFunction, ...args);
+     }
+     /**
+      * @remarks
+@@ -472,7 +478,7 @@ class Frame {
+      * @param args - arguments to be passed to the pageFunction
+      */
+     async evaluate(pageFunction, ...args) {
+-        return this._mainWorld.evaluate(pageFunction, ...args);
++        return this._isolatedWorld.evaluate(pageFunction, ...args);
+     }
+     /**
+      * This method queries the frame for the given selector.
+@@ -482,7 +488,7 @@ class Frame {
+      * element, or `null` if it was not found.
+      */
+     async $(selector) {
+-        return this._mainWorld.$(selector);
++        return this._isolatedWorld.$(selector);
+     }
+     /**
+      * This method evaluates the given XPath expression and returns the results.
+@@ -490,7 +496,7 @@ class Frame {
+      * @param expression - the XPath expression to evaluate.
+      */
+     async $x(expression) {
+-        return this._mainWorld.$x(expression);
++        return this._isolatedWorld.$x(expression);
+     }
+     /**
+      * @remarks
+@@ -512,7 +518,7 @@ class Frame {
+      * @param args - additional arguments to pass to `pageFuncton`
+      */
+     async $eval(selector, pageFunction, ...args) {
+-        return this._mainWorld.$eval(selector, pageFunction, ...args);
++        return this._isolatedWorld.$eval(selector, pageFunction, ...args);
+     }
+     /**
+      * @remarks
+@@ -534,7 +540,7 @@ class Frame {
+      * @param args - additional arguments to pass to `pageFuncton`
+      */
+     async $$eval(selector, pageFunction, ...args) {
+-        return this._mainWorld.$$eval(selector, pageFunction, ...args);
++        return this._isolatedWorld.$$eval(selector, pageFunction, ...args);
+     }
+     /**
+      * This runs `document.querySelectorAll` in the frame and returns the result.
+@@ -543,7 +549,7 @@ class Frame {
+      * @returns An array of element handles pointing to the found frame elements.
+      */
+     async $$(selector) {
+-        return this._mainWorld.$$(selector);
++        return this._isolatedWorld.$$(selector);
+     }
+     /**
+      * @returns the full HTML contents of the frame, including the doctype.
+@@ -608,7 +614,7 @@ class Frame {
+      * frame.
+      */
+     async addScriptTag(options) {
+-        return this._mainWorld.addScriptTag(options);
++        return this._isolatedWorld.addScriptTag(options);
+     }
+     /**
+      * Adds a `<link rel="stylesheet">` tag into the page with the desired url or
+@@ -621,7 +627,7 @@ class Frame {
+      * frame.
+      */
+     async addStyleTag(options) {
+-        return this._mainWorld.addStyleTag(options);
++        return this._isolatedWorld.addStyleTag(options);
+     }
+     /**
+      *
+@@ -738,7 +744,7 @@ class Frame {
+      * @returns a promise that resolves when the typing is complete.
+      */
+     async type(selector, text, options) {
+-        return this._mainWorld.type(selector, text, options);
++        return this._isolatedWorld.type(selector, text, options);
+     }
+     /**
+      * @remarks
+@@ -842,7 +848,7 @@ class Frame {
+         const handle = await this._secondaryWorld.waitForSelector(selector, options);
+         if (!handle)
+             return null;
+-        const mainExecutionContext = await this._mainWorld.executionContext();
++        const mainExecutionContext = await this._isolatedWorld.executionContext();
+         const result = await mainExecutionContext._adoptElementHandle(handle);
+         await handle.dispose();
+         return result;
+@@ -866,7 +872,7 @@ class Frame {
+         const handle = await this._secondaryWorld.waitForXPath(xpath, options);
+         if (!handle)
+             return null;
+-        const mainExecutionContext = await this._mainWorld.executionContext();
++        const mainExecutionContext = await this._isolatedWorld.executionContext();
+         const result = await mainExecutionContext._adoptElementHandle(handle);
+         await handle.dispose();
+         return result;
+@@ -952,6 +958,7 @@ class Frame {
+         this._detached = true;
+         this._mainWorld._detach();
+         this._secondaryWorld._detach();
++        this._isolatedWorld._detach();
+         if (this._parentFrame)
+             this._parentFrame._childFrames.delete(this);
+         this._parentFrame = null;
+diff --git a/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js b/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js
+index ed223e7..023e5f7 100644
+--- a/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js
++++ b/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js
+@@ -61,7 +61,7 @@ class ChromeLauncher {
+     }
+     async launch(options = {}) {
+         const { ignoreDefaultArgs = false, args = [], dumpio = false, executablePath = null, pipe = false, env = process.env, handleSIGINT = true, handleSIGTERM = true, handleSIGHUP = true, ignoreHTTPSErrors = false, defaultViewport = { width: 800, height: 600 }, slowMo = 0, timeout = 30000, } = options;
+-        const profilePath = path.join(os.tmpdir(), 'puppeteer_dev_chrome_profile-');
++        const profilePath = path.join(os.tmpdir(), 'chrome_profile-');
+         const chromeArguments = [];
+         if (!ignoreDefaultArgs)
+             chromeArguments.push(...this.defaultArgs(options));
+@@ -306,7 +306,7 @@ class FirefoxLauncher {
+         return firefoxArguments;
+     }
+     async _createProfile(extraPrefs) {
+-        const profilePath = await mkdtempAsync(path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-'));
++        const profilePath = await mkdtempAsync(path.join(os.tmpdir(), 'firefox_profile-'));
+         const prefsJS = [];
+         const userJS = [];
+         const server = 'dummy.test';

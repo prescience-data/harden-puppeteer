@@ -5,12 +5,14 @@ More about isolated worlds here: https://developer.chrome.com/extensions/content
 
 ### Patching with Patch-Package
 
-Patches available for Puppeteer 1.19.0, 2.1.1, 5.2.1 & Puppeteer-Core 5.3.1 (other versions should apply manually, following the changes)
+Patches available for `puppeteer` `1.19.0`, `2.1.1`, `5.2.1`, `5.3.1` & `puppeteer-core` `5.3.1` 
+
+(Note: Other versions can apply manually, following the changes in the patch diff files.)
 
 - Install Patch-Package https://github.com/ds300/patch-package 
 - Copy the `patches` folder to your project directory
-- Run `node patch-package` to apply the changes
-- Run `node patch-package --reverse` to remove
+- Run `npx patch-package` to apply the changes
+- Run `npx patch-package --reverse` to remove
 
 ### What it does
 
@@ -25,6 +27,8 @@ The patch modifies Puppeteer's `FrameManager` class to automatically create a ne
 ##### `ExecutionContext.js`
 - Change the name of the script src exposed in `new Error()` to a random common script name.
 - Add some attributes `_isIsolated` and `_contextName` to help detect if isolated or not.
+- Additional script names can be added by modifying https://github.com/prescience-data/harden-puppeteer/blob/master/patches/puppeteer%2B5.2.1.patch#L10
+- There is an evasion in `puppeteer-extra` which is worth implementing as well as it is likely more robust.
      
 ##### `FrameManager.js`
 - Remove the reference to puppeteer in the utility world name potentially exposed via `new Error()`.
@@ -37,11 +41,14 @@ The patch modifies Puppeteer's `FrameManager` class to automatically create a ne
 
 ### How to reverse
 
-If using Patch-Package running `node patch-package --remove` should work.
+If using Patch-Package running `patch-package --reverse` should work.
+
+```bash
+$ npx patch-package --reverse;
+```
 
 If manually editing your files, just delete your `node_modules` folder and run `npm install` again.
 
-For example: 
 ```bash
 $ rm -rf ./node_modules; npm install;
 ```
@@ -64,4 +71,6 @@ The patched version still runs any scripts injected via `page.evaluateOnNewDocum
 
 However, everything else is running in the `_isolatedWorld` and outside the security scope of detection scripts monitoring execution.
 
-Naturally, they would be able to observe changes you make to the DOM, but only the **outcome**, not *how* the execution is occurring.
+The existing page scripts will continue to run as normal in the Main World and will appear to function as normal (which is good), but you will no longer be able to interact with on-page scripts (which might be bad, depending on your use-case).
+
+Naturally, they would be able to observe changes you make to the DOM, but only the **outcome**, not *how* the execution is occurring. Consider the implications of this before using.
