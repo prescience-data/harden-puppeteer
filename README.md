@@ -17,7 +17,7 @@ More about isolated worlds here: https://developer.chrome.com/extensions/content
 
 #### Puppeteer Core
 - [x] `5.3.1`
-- [] `7.0.1`
+- [ ] `7.0.1`
 
 ## Patching with Patch-Package
 
