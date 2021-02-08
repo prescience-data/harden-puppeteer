@@ -1,0 +1,240 @@
+diff --git a/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js b/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js
+index 3be604c..fd18f51
+--- a/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js
++++ b/node_modules/puppeteer/lib/cjs/puppeteer/common/ExecutionContext.js
+@@ -19,7 +19,7 @@ exports.ExecutionContext = exports.EVALUATION_SCRIPT_URL = void 0;
+ const assert_js_1 = require("./assert.js");
+ const helper_js_1 = require("./helper.js");
+ const JSHandle_js_1 = require("./JSHandle.js");
+-exports.EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__';
++exports.EVALUATION_SCRIPT_URL = '';
+ const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
+ /**
+  * This class represents a context for JavaScript execution. A [Page] might have
+@@ -161,7 +161,7 @@ class ExecutionContext {
+                 : expression + '\n' + suffix;
+             const { exceptionDetails, result: remoteObject } = await this._client
+                 .send('Runtime.evaluate', {
+-                expression: expressionWithSourceUrl,
++                expression: expression,
+                 contextId,
+                 returnByValue,
+                 awaitPromise: true,
+diff --git a/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js b/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js
+index 227745f..12e757e
+--- a/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js
++++ b/node_modules/puppeteer/lib/cjs/puppeteer/common/FrameManager.js
+@@ -24,7 +24,7 @@ const ExecutionContext_js_1 = require("./ExecutionContext.js");
+ const LifecycleWatcher_js_1 = require("./LifecycleWatcher.js");
+ const DOMWorld_js_1 = require("./DOMWorld.js");
+ const NetworkManager_js_1 = require("./NetworkManager.js");
+-const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
++const UTILITY_WORLD_NAME = 'uw';
+ /**
+  * We use symbols to prevent external parties listening to these events.
+  * They are internal to Puppeteer.
+@@ -459,7 +459,7 @@ class Frame {
+      * @param args - arguments to be passed to the pageFunction
+      */
+     async evaluateHandle(pageFunction, ...args) {
+-        return this._mainWorld.evaluateHandle(pageFunction, ...args);
++        return this._secondaryWorld.evaluateHandle(pageFunction, ...args);
+     }
+     /**
+      * @remarks
+@@ -481,7 +481,7 @@ class Frame {
+      * element, or `null` if it was not found.
+      */
+     async $(selector) {
+-        return this._mainWorld.$(selector);
++        return this._secondaryWorld.$(selector);
+     }
+     /**
+      * This method evaluates the given XPath expression and returns the results.
+@@ -489,7 +489,7 @@ class Frame {
+      * @param expression - the XPath expression to evaluate.
+      */
+     async $x(expression) {
+-        return this._mainWorld.$x(expression);
++        return this._secondaryWorld.$x(expression);
+     }
+     /**
+      * @remarks
+@@ -533,7 +533,7 @@ class Frame {
+      * @param args - additional arguments to pass to `pageFuncton`
+      */
+     async $$eval(selector, pageFunction, ...args) {
+-        return this._mainWorld.$$eval(selector, pageFunction, ...args);
++        return this._secondaryWorld.$$eval(selector, pageFunction, ...args);
+     }
+     /**
+      * This runs `document.querySelectorAll` in the frame and returns the result.
+@@ -542,7 +542,7 @@ class Frame {
+      * @returns An array of element handles pointing to the found frame elements.
+      */
+     async $$(selector) {
+-        return this._mainWorld.$$(selector);
++        return this._secondaryWorld.$$(selector);
+     }
+     /**
+      * @returns the full HTML contents of the frame, including the doctype.
+@@ -737,7 +737,7 @@ class Frame {
+      * @returns a promise that resolves when the typing is complete.
+      */
+     async type(selector, text, options) {
+-        return this._mainWorld.type(selector, text, options);
++        return this._secondaryWorld.type(selector, text, options);
+     }
+     /**
+      * @remarks
+diff --git a/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js b/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js
+index 8a43638..cd37bea
+--- a/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js
++++ b/node_modules/puppeteer/lib/cjs/puppeteer/node/Launcher.js
+@@ -54,7 +54,7 @@ class ChromeLauncher {
+     }
+     async launch(options = {}) {
+         const { ignoreDefaultArgs = false, args = [], dumpio = false, executablePath = null, pipe = false, env = process.env, handleSIGINT = true, handleSIGTERM = true, handleSIGHUP = true, ignoreHTTPSErrors = false, defaultViewport = { width: 800, height: 600 }, slowMo = 0, timeout = 30000, } = options;
+-        const profilePath = path.join(os.tmpdir(), 'puppeteer_dev_chrome_profile-');
++        const profilePath = path.join(os.tmpdir(), 'dev_chrome_profile-');
+         const chromeArguments = [];
+         if (!ignoreDefaultArgs)
+             chromeArguments.push(...this.defaultArgs(options));
+@@ -257,7 +257,7 @@ class FirefoxLauncher {
+         return firefoxArguments;
+     }
+     async _createProfile(extraPrefs) {
+-        const profilePath = await mkdtempAsync(path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-'));
++        const profilePath = await mkdtempAsync(path.join(os.tmpdir(), 'dev_firefox_profile-'));
+         const prefsJS = [];
+         const userJS = [];
+         const server = 'dummy.test';
+diff --git a/node_modules/puppeteer/lib/esm/puppeteer/common/ExecutionContext.js b/node_modules/puppeteer/lib/esm/puppeteer/common/ExecutionContext.js
+index d0b4ada..3b115c5
+--- a/node_modules/puppeteer/lib/esm/puppeteer/common/ExecutionContext.js
++++ b/node_modules/puppeteer/lib/esm/puppeteer/common/ExecutionContext.js
+@@ -16,7 +16,7 @@
+ import { assert } from './assert.js';
+ import { helper } from './helper.js';
+ import { createJSHandle, JSHandle } from './JSHandle.js';
+-export const EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__';
++export const EVALUATION_SCRIPT_URL = '';
+ const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
+ /**
+  * This class represents a context for JavaScript execution. A [Page] might have
+@@ -158,7 +158,7 @@ export class ExecutionContext {
+                 : expression + '\n' + suffix;
+             const { exceptionDetails, result: remoteObject } = await this._client
+                 .send('Runtime.evaluate', {
+-                expression: expressionWithSourceUrl,
++                expression: expression,
+                 contextId,
+                 returnByValue,
+                 awaitPromise: true,
+diff --git a/node_modules/puppeteer/lib/esm/puppeteer/common/FrameManager.js b/node_modules/puppeteer/lib/esm/puppeteer/common/FrameManager.js
+index eb9c200..6c78691
+--- a/node_modules/puppeteer/lib/esm/puppeteer/common/FrameManager.js
++++ b/node_modules/puppeteer/lib/esm/puppeteer/common/FrameManager.js
+@@ -21,7 +21,7 @@ import { ExecutionContext, EVALUATION_SCRIPT_URL } from './ExecutionContext.js';
+ import { LifecycleWatcher, } from './LifecycleWatcher.js';
+ import { DOMWorld } from './DOMWorld.js';
+ import { NetworkManager } from './NetworkManager.js';
+-const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
++const UTILITY_WORLD_NAME = 'uw';
+ /**
+  * We use symbols to prevent external parties listening to these events.
+  * They are internal to Puppeteer.
+@@ -455,7 +455,7 @@ export class Frame {
+      * @param args - arguments to be passed to the pageFunction
+      */
+     async evaluateHandle(pageFunction, ...args) {
+-        return this._mainWorld.evaluateHandle(pageFunction, ...args);
++        return this._secondaryWorld.evaluateHandle(pageFunction, ...args);
+     }
+     /**
+      * @remarks
+@@ -477,7 +477,7 @@ export class Frame {
+      * element, or `null` if it was not found.
+      */
+     async $(selector) {
+-        return this._mainWorld.$(selector);
++        return this._secondaryWorld.$(selector);
+     }
+     /**
+      * This method evaluates the given XPath expression and returns the results.
+@@ -485,7 +485,7 @@ export class Frame {
+      * @param expression - the XPath expression to evaluate.
+      */
+     async $x(expression) {
+-        return this._mainWorld.$x(expression);
++        return this._secondaryWorld.$x(expression);
+     }
+     /**
+      * @remarks
+@@ -529,7 +529,7 @@ export class Frame {
+      * @param args - additional arguments to pass to `pageFuncton`
+      */
+     async $$eval(selector, pageFunction, ...args) {
+-        return this._mainWorld.$$eval(selector, pageFunction, ...args);
++        return this._secondaryWorld.$$eval(selector, pageFunction, ...args);
+     }
+     /**
+      * This runs `document.querySelectorAll` in the frame and returns the result.
+@@ -538,7 +538,7 @@ export class Frame {
+      * @returns An array of element handles pointing to the found frame elements.
+      */
+     async $$(selector) {
+-        return this._mainWorld.$$(selector);
++        return this._secondaryWorld.$$(selector);
+     }
+     /**
+      * @returns the full HTML contents of the frame, including the doctype.
+@@ -603,7 +603,7 @@ export class Frame {
+      * frame.
+      */
+     async addScriptTag(options) {
+-        return this._mainWorld.addScriptTag(options);
++        return this._secondaryWorld.addScriptTag(options);
+     }
+     /**
+      * Adds a `<link rel="stylesheet">` tag into the page with the desired url or
+@@ -616,7 +616,7 @@ export class Frame {
+      * frame.
+      */
+     async addStyleTag(options) {
+-        return this._mainWorld.addStyleTag(options);
++        return this._secondaryWorld.addStyleTag(options);
+     }
+     /**
+      *
+@@ -733,7 +733,7 @@ export class Frame {
+      * @returns a promise that resolves when the typing is complete.
+      */
+     async type(selector, text, options) {
+-        return this._mainWorld.type(selector, text, options);
++        return this._secondaryWorld.type(selector, text, options);
+     }
+     /**
+      * @remarks
+diff --git a/node_modules/puppeteer/lib/esm/puppeteer/node/Launcher.js b/node_modules/puppeteer/lib/esm/puppeteer/node/Launcher.js
+index 6cf5a19..23a7c39
+--- a/node_modules/puppeteer/lib/esm/puppeteer/node/Launcher.js
++++ b/node_modules/puppeteer/lib/esm/puppeteer/node/Launcher.js
+@@ -33,7 +33,7 @@ class ChromeLauncher {
+     }
+     async launch(options = {}) {
+         const { ignoreDefaultArgs = false, args = [], dumpio = false, executablePath = null, pipe = false, env = process.env, handleSIGINT = true, handleSIGTERM = true, handleSIGHUP = true, ignoreHTTPSErrors = false, defaultViewport = { width: 800, height: 600 }, slowMo = 0, timeout = 30000, } = options;
+-        const profilePath = path.join(os.tmpdir(), 'puppeteer_dev_chrome_profile-');
++        const profilePath = path.join(os.tmpdir(), 'dev_chrome_profile-');
+         const chromeArguments = [];
+         if (!ignoreDefaultArgs)
+             chromeArguments.push(...this.defaultArgs(options));
+@@ -236,7 +236,7 @@ class FirefoxLauncher {
+         return firefoxArguments;
+     }
+     async _createProfile(extraPrefs) {
+-        const profilePath = await mkdtempAsync(path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-'));
++        const profilePath = await mkdtempAsync(path.join(os.tmpdir(), 'dev_firefox_profile-'));
+         const prefsJS = [];
+         const userJS = [];
+         const server = 'dummy.test';

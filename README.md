@@ -1,20 +1,32 @@
 # Harden Vanilla Puppeteer
+
 A patch to modify some core Puppeteer files to decrease detection rates by switching execution to an isolated world. 
 
 More about isolated worlds here: https://developer.chrome.com/extensions/content_scripts
 
-### Patching with Patch-Package
+## Current Patches
 
-Patches available for `puppeteer` `1.19.0`, `2.1.1`, `5.2.1`, `5.3.1` & `puppeteer-core` `5.3.1` 
+> Note: Other versions can apply manually, following the changes in the patch diff files.
 
-(Note: Other versions can apply manually, following the changes in the patch diff files.)
+#### Puppeteer
+- [x] `1.19.0`
+- [x] `2.1.1`
+- [x] `5.2.1`
+- [x] `5.3.1`
+- [x] `7.0.1`
 
-- Install Patch-Package https://github.com/ds300/patch-package 
-- Copy the `patches` folder to your project directory
-- Run `npx patch-package` to apply the changes
-- Run `npx patch-package --reverse` to remove
+#### Puppeteer Core
+- [x] `5.3.1`
+- [] `7.0.1`
 
-### What it does
+## Patching with Patch-Package
+
+1. Install Patch-Package https://github.com/ds300/patch-package 
+2. Copy the `patches` folder to your project directory
+3. Run `npx patch-package` to apply the changes
+4. Run `npx patch-package --reverse` to remove
+
+## What it does
 
 To avoid maintaining a fork of vanilla Puppeteer, the patch makes a few edits to core Puppeteer files within your `node_modules` folder.
 
@@ -22,24 +34,21 @@ The goal is to strip strings that reference Puppeteer which are exposed via thro
 
 The patch modifies Puppeteer's `FrameManager` class to automatically create a new Isolated World and use this as the context rather than the default one.
 
-### What files are modified?
+## What files are modified?
 
 ##### `ExecutionContext.js`
-- Change the name of the script src exposed in `new Error()` to a random common script name.
-- Add some attributes `_isIsolated` and `_contextName` to help detect if isolated or not.
-- Additional script names can be added by modifying https://github.com/prescience-data/harden-puppeteer/blob/master/patches/puppeteer%2B5.2.1.patch#L10
-- There is an evasion in `puppeteer-extra` which is worth implementing as well as it is likely more robust.
+- Removes sourceURL from `Error` stack inspection.
+- There is an evasion in `puppeteer-extra` for this which is worth implementing as well as it is likely more robust.
      
 ##### `FrameManager.js`
-- Remove the reference to puppeteer in the utility world name potentially exposed via `new Error()`.
-- Add a new `DOMWorld` called `_isolatedWorld` and call `_ensureIsolatedWorld()` to isolate it.
-- Overwrite basically every call to the unprotected `_mainWorld` with `_isolatedWorld` except for `waitForFunction()`.
+- Remove the reference to puppeteer in the utility world name.
+- Overwrite basically every call to the unprotected `_mainWorld` with `_secondaryWorld` except for `evaluate()`, `$eval()`, `waitForFunction()`.
   
 ##### `Launcher.js`
 - Remove reference to puppeteer in the Chrome profile name.
 - Remove reference to puppeteer in the Firefox profile name.
 
-### How to reverse
+## How to reverse
 
 If using Patch-Package running `patch-package --reverse` should work.
 
@@ -53,7 +62,7 @@ If manually editing your files, just delete your `node_modules` folder and run `
 $ rm -rf ./node_modules; npm install;
 ```
 
-### Test
+## Test
 If you'd like to create a test to check if your code is detectable, there is a basic starting point here:
 
 - Puppeteer Test: https://github.com/prescience-data/puppeteer-botcheck/blob/b6848845b8b5887608784caa2fe7a078db866e9b/Botcheck.js#L45
@@ -63,9 +72,11 @@ If you'd like to create a test to check if your code is detectable, there is a b
 Here's the differences between unpatched and patched:
 
 ##### Unpatched:
-![Unpatched](https://github.com/prescience-data/harden-puppeteer/blob/master/isolated_unpatched.jpg?raw=true)
+![Unpatched](https://user-images.githubusercontent.com/65471523/107285213-f0b44100-6ab2-11eb-9b6e-ec983a3d0ec4.png)
+ 
 ##### Patched:
-![Patched](https://github.com/prescience-data/harden-puppeteer/blob/master/isolated_patched.jpg?raw=true)
+
+![Patched](https://user-images.githubusercontent.com/65471523/107285220-f447c800-6ab2-11eb-8d6a-016d7f3da80e.png)
 
 The patched version still runs any scripts injected via `page.evaluateOnNewDocument()` in the `_mainWorld` so watch for that.
 
